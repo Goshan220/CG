@@ -106,7 +106,7 @@ class SelfIntersection:
                             print("A=B")
                         else:
                             continue
-                        if ((a * b <= 0) & (c * d == 0)) | ((a * b <= 0) & (c * d <= 0)):
+                        if ((a * b <= 0) & (c * d == 0)) | ((a * b == 0) & (c * d <= 0)):
                             return 1
                         else:
                             continue
