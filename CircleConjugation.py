@@ -4,13 +4,12 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 from math import sqrt
-from sympy import Circle, Line2D
-from sympy import sympify, Symbol, Rational
+from sympy import Line2D
+from sympy import sympify, Rational
 from sympy.geometry import Point2D, Segment2D, Circle
 import matplotlib.lines as mlines
-import math
-import pylab
 import matplotlib.path
+import math
 
 #0 -3 5 -5
 class Window(QDialog):
@@ -58,7 +57,7 @@ class Window(QDialog):
         self.main_line_points = []                          # x1, y1, x2, y2
         self.point_intersect_big_and_small_circle = []      # пересечение маленьких окружностей с основной
         self.center_of_small_circles = []                   # центры маленьких окружностей
-        self.point_per_line = []                            # точки пересечения маленьких окружностей с линией
+        self.point_intersect_on_line = []                   # точки пересечения маленьких окружностей с линией
         self.style = 1
         # __end of initialization__
 
@@ -105,12 +104,15 @@ class Window(QDialog):
         if distance < self.big_circle[2]:
             print("четыре сопрягающих окружности")
             self.intersection_with_line(4)
+            self.draw_arc()
         elif distance <= (2 * self.r_small_circle + self.big_circle[2]):    # дистанция от прямой до центра окружности
                                                 # меньше чем диаметр малой окружности + радиус большой окружности
             print("две сопрягающих окружности")
             self.intersection_with_line(2)
+            self.draw_arc()
         else:
             print("невозможно постоить сопрягающую окружность")
+
         self.canvas.draw()
 
     def __plot_line(self, p1, p2):
@@ -133,41 +135,6 @@ class Window(QDialog):
         self.figure.gca().axis('scaled')
         # self.canvas.draw() #вероятно не нужно
         return first_extreme_point, second_extreme_point
-
-    # def intersection(self, h):
-    #     main_circle = self.main_circle.text().split()
-    #     koniunkcja_sfer = self.circle.text().split()
-    #     r = int(koniunkcja_sfer[2])
-    #     R = int(main_circle[2])
-    #     o = [int(main_circle[0]), int(main_circle[1])]
-    #     line = self.line.text().split()
-    #     p1 = [int(line[0]), int(line[1])]
-    #     p2 = [int(line[2]), int(line[3])]
-    #
-    #     oh = [h[0] - o[0], h[1] - o[1]]
-    #     print("oh:", oh)
-    #     # oh = [o[0] - h[0], o[1] - h[1]]
-    #
-    #     qv = [p2[0] - p1[0], p2[1] - p1[1]]
-    #     print("qv:", qv)
-    #     # qv = [p1[0] - p2[0], p1[1] - p2[1]]
-    #
-    #     b = oh[0]*qv[0] + oh[1]*qv[1]
-    #     c = (oh[0]**2)*(qv[0]**2) - (R+r)**2
-    #
-    #     Px1 = h[0] - (b - (b**2-c)**(1/2))*p2[0]
-    #     Py1 = h[1] - (b - (b**2-c)**(1/2))*p2[1]
-    #     Px2 = h[0] - (b + (b**2-c)**(1/2))*p2[0]
-    #     Py2 = h[1] - (b + (b**2-c)**(1/2))*p2[1]
-    #     # print(Px1)
-    #     # print(Py1)
-    #     # print(Px2)
-    #     # print(Py2)
-    #
-    #     # point1 = mlines.Line2D([Px1, Px1+1], [Py1, Py1+1], color='g')
-    #     # point2 = mlines.Line2D([Px2, Px2+1], [Py2, Py2+1], color='g')
-    #     # self.figure.gca().add_line(point1)
-    #     # self.figure.gca().add_line(point2)
 
     def intersection_with_circle(self, point1, point2):
         r = self.r_small_circle
@@ -214,59 +181,40 @@ class Window(QDialog):
         print("ДЕБАГ: центры малых окружностей ", self.center_of_small_circles)
         for i in range(rang):
             try:
-                result = self.test(self.extreme_points_of_main_line[0][0],
-                                   self.extreme_points_of_main_line[0][1],
-                                   self.extreme_points_of_main_line[1][0],
-                                   self.extreme_points_of_main_line[1][1],
-                                   self.center_of_small_circles[i][0],
-                                   self.center_of_small_circles[i][1],
-                                   self.r_small_circle + 0.1)
+                result = self.find_intersect_circle_and_line(self.extreme_points_of_main_line[0][0],
+                                                             self.extreme_points_of_main_line[0][1],
+                                                             self.extreme_points_of_main_line[1][0],
+                                                             self.extreme_points_of_main_line[1][1],
+                                                             self.center_of_small_circles[i][0],
+                                                             self.center_of_small_circles[i][1],
+                                                             self.r_small_circle + 0.1)
                 if result != []:
-                    circle = plt.Circle((self.center_of_small_circles[i][0],
-                                         self.center_of_small_circles[i][1]),
-                                        radius=self.r_small_circle,
-                                        fill=False)
-                    self.figure.gca().add_patch(circle)
-                # res = 0
-                # A = Point2D(self.xy[0][0], self.xy[0][1])
-                # B = Point2D(self.xy[1][0], self.xy[1][1])
-                # F = Segment2D(A, B)
-                # C = Point2D(self.point_small_cr[i][0], self.point_small_cr[i][1])
-                # print("точки мал окружностей ", self.point_small_cr[i][0], self.point_small_cr[i][1])
-                # koniunkcja_sfer = self.circle.text().split()
-                # r = int(koniunkcja_sfer[2])
-                # circle = plt.Circle((self.point_small_cr[i][0], self.point_small_cr[i][1]), radius=r, fill=False)
-                # self.figure.gca().add_patch(circle)
-                # c = Circle(C, r)
-                # res = c.intersection(F)
-                # if res == []:
-                #     continue
-                # print("result", res)
-                # temp1 = res[0]
-                # temp2 = res[1]
-                # temp1 = str(temp1)[7:]
-                # temp2 = str(temp2)[7:]
-                # # print(tempu1)
-                # # print(temp2)
-                # print("RESULT", eval(temp1))
-                # print("RESULT", eval(temp2))
+                    # circle = plt.Circle((self.center_of_small_circles[i][0],
+                    #                      self.center_of_small_circles[i][1]),
+                    #                     radius=self.r_small_circle,
+                    #                     fill=False)
+                    # self.figure.gca().add_patch(circle)
+                    self.point_intersect_on_line.append(result)
             except:
                 print("ERROR")
+        print("Точки на прямой :", self.point_intersect_on_line)
 
-    def test(self, x1, y1, x2, y2, x3, y3, r):
+    def find_intersect_circle_and_line(self, x1, y1, x2, y2, x3, y3, r):
         A = Point2D(x1, y1)
         B = Point2D(x2, y2)
         C = Point2D(x3, y3)
         F = Line2D(A, B)
-        # c = Circle(C, sympify(r, rational=True))
         c = Circle(C, sympify(Rational(r), rational=True))
         i_0 = F.intersection(c)
         temp1 = i_0[0]
         temp2 = i_0[1]
         temp1 = str(temp1)[7:]
         temp2 = str(temp2)[7:]
-        print("результат теста", eval(temp1), eval(temp2))
-        return i_0
+        temp1 = eval(temp1)
+        temp2 = eval(temp2)
+        x = (temp1[0] + temp2[0])/2
+        y = (temp1[1] + temp2[1])/2
+        return [x, y]
 
     def __auxiliary_lines(self):
         self.__for_debug("построение вспомогательных линий")
@@ -310,6 +258,70 @@ class Window(QDialog):
             # self.figure.gca().add_line(new_line2)
         self.__for_debug("конец построения вспомогательных линий")
 
+    def draw_arc(self):
+        self.__for_debug("РИСОВАНИЕ СЕКТОРОВ")
+
+        for i in range(len(self.center_of_small_circles)):
+            x0, y0 = self.center_of_small_circles[i][0], self.center_of_small_circles[i][1]
+            x1, y1 = self.point_intersect_on_line[i][0], self.point_intersect_on_line[i][1]
+            x2, y2 = self.point_intersect_big_and_small_circle[i][0], self.point_intersect_big_and_small_circle[i][1]
+            print("Центр ", x0, y0)
+            width = 2 * self.r_small_circle
+            height = 2 * self.r_small_circle
+
+            angle_1 = math.degrees(math.atan2(y1 - y0, x1 - x0))
+            angle_2 = math.degrees(math.atan2(y2 - y0, x2 - x0))
+            print("START_ARC ", angle_1)
+            print("END_ARC ", angle_2)
+            Z = lambda x: 360 + x
+            if angle_1 < 0:
+                temp_1 = Z(angle_1)
+            else:
+                temp_1 = angle_1
+            if angle_2 < 0:
+                temp_2 = Z(angle_2)
+            else:
+                temp_2 = angle_2
+
+            print("После преобразования", temp_1)
+            print("После преобразования", temp_2)
+            print("1: ", temp_1 - temp_2)
+            print("2: ", temp_2 - temp_1)
+
+            if temp_1 > temp_2:
+                d1 = temp_1 - temp_2
+                d2 = 360 + temp_2 - temp_1
+                if d1 > d2:
+                    start_angle = temp_1
+                    end_angle = temp_2
+                else:
+                    start_angle = temp_2
+                    end_angle = temp_1
+            else:
+                d1 = temp_2 - temp_1
+                d2 = 360 + temp_1 - temp_2
+                if d1 > d2:
+                    start_angle = temp_2
+                    end_angle = temp_1
+                else:
+                    start_angle = temp_1
+                    end_angle = temp_2
+
+
+            # if abs(temp_1 - temp_2) > 180:
+            #     start_angle = angle_2
+            #     end_angle = angle_1
+            # else:
+            #     start_angle = angle_1
+            #     end_angle = angle_2
+
+            arc = matplotlib.patches.Arc((x0, y0),
+                                         width,
+                                         height,
+                                         theta1=start_angle,
+                                         theta2=end_angle)
+            self.figure.gca().add_patch(arc)
+
     def find_intersect_circle_and_circle(self):
         self.__for_debug("Поиск точек пересечения круга и малых кругов")
         for i in self.center_of_small_circles:
@@ -318,7 +330,6 @@ class Window(QDialog):
         print(self.point_intersect_big_and_small_circle)
         # new_line2 = mlines.Line2D([i[0], self.point_intersect_big_and_small_circle[0][0]], [i[1], self.point_intersect_big_and_small_circle[0][1]], color='y')
         # self.figure.gca().add_line(new_line2)
-
 
     @staticmethod
     def point_on_line(xa, ya, xb, yb, dist):
