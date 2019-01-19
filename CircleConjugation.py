@@ -10,8 +10,9 @@ from sympy.geometry import Point2D, Segment2D, Circle
 import matplotlib.lines as mlines
 import matplotlib.path
 import math
+import random
 
-#0 -3 5 -5
+
 class Window(QDialog):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
@@ -21,17 +22,16 @@ class Window(QDialog):
 
         # buttons
         self.button_plot = QPushButton('Plot')
+        self.button_random = QPushButton('Random')
         self.button_plot.clicked.connect(self.__plot)
+        self.button_random.clicked.connect(self.__random)
 
         self.main_circle = QLineEdit()
-        # self.main_circle.setText("главный круг: x, y, r")
-        self.main_circle.setText("4 5 7")
+        self.main_circle.setText("главный круг: x, y, r")
         self.circle = QLineEdit()
-        # self.circle.setText("круг сопряжения: r")
-        self.circle.setText("2 2 4")
+        self.circle.setText("круг сопряжения: r")
         self.line = QLineEdit()
         self.line.setText("точки прямой: x1, y1, x2, y2")
-        self.line.setText("0 15 10 20")
 
         layout_global = QHBoxLayout()
         layout_left = QVBoxLayout()
@@ -42,6 +42,7 @@ class Window(QDialog):
         layout_right.addWidget(self.circle)
         layout_right.addWidget(self.line)
         layout_right.addWidget(self.button_plot)
+        layout_right.addWidget(self.button_random)
         layout_global.addLayout(layout_left)
         layout_global.addLayout(layout_right)
 
@@ -67,7 +68,7 @@ class Window(QDialog):
         self.big_circle.append(int(temp[1]))
         self.big_circle.append(int(temp[2]))
         temp = self.circle.text().split()
-        self.r_small_circle = int(temp[2])
+        self.r_small_circle = int(temp[0])
         temp = self.line.text().split()
         self.main_line_points.append(int(temp[0]))
         self.main_line_points.append(int(temp[1]))
@@ -81,12 +82,15 @@ class Window(QDialog):
         p2 = [self.main_line_points[2], self.main_line_points[3]]
 
         self.figure.clear()
-        circle = plt.Circle(((self.big_circle[0]), (self.big_circle[1])), radius=(self.big_circle[2]), fill=False)
+        circle = plt.Circle(((self.big_circle[0]), (self.big_circle[1])),
+                            radius=(self.big_circle[2]),
+                            fill=False,
+                            color='b')
         circle_for_help = plt.Circle(((self.big_circle[0]), (self.big_circle[1])),
                              radius=(self.big_circle[2]) + self.r_small_circle,
                              fill=False,
                              linestyle='--',
-                             color='g')
+                             color='w')
         self.figure.gca().add_patch(circle)
         self.figure.gca().add_patch(circle_for_help) #Без этого не работает!
         self.figure.gca().axis('scaled')
@@ -115,7 +119,7 @@ class Window(QDialog):
 
         self.canvas.draw()
 
-    def __plot_line(self, p1, p2):
+    def __plot_line(self, p1, p2, stop=0):
         xmin, xmax = self.figure.gca().get_xbound()
         if (p2[0] == p1[0]):
             xmin = xmax = p1[0]
@@ -131,8 +135,9 @@ class Window(QDialog):
 
         first_extreme_point = [xmin, ymin]
         second_extreme_point = [xmax, ymax]
-        self.figure.gca().add_line(line)
-        self.figure.gca().axis('scaled')
+        if stop == 0:
+            self.figure.gca().add_line(line)
+            self.figure.gca().axis('scaled')
         # self.canvas.draw() #вероятно не нужно
         return first_extreme_point, second_extreme_point
 
@@ -189,11 +194,6 @@ class Window(QDialog):
                                                              self.center_of_small_circles[i][1],
                                                              self.r_small_circle + 0.1)
                 if result != []:
-                    # circle = plt.Circle((self.center_of_small_circles[i][0],
-                    #                      self.center_of_small_circles[i][1]),
-                    #                     radius=self.r_small_circle,
-                    #                     fill=False)
-                    # self.figure.gca().add_patch(circle)
                     self.point_intersect_on_line.append(result)
             except:
                 print("ERROR")
@@ -248,7 +248,7 @@ class Window(QDialog):
             p2 = [normal_points[0], normal_points[1]]
 
             print("точки вспомогательного отрезка ", p1, " ", p2)
-            first_extreme_point, second_extreme_point = self.__plot_line(p1, p2)
+            first_extreme_point, second_extreme_point = self.__plot_line(p1, p2, 1)
             intersection_points = self.intersection_with_circle(first_extreme_point, second_extreme_point)
             if intersection_points != -666:
                 self.center_of_small_circles.append(intersection_points[0])
@@ -260,12 +260,10 @@ class Window(QDialog):
 
     def draw_arc(self):
         self.__for_debug("РИСОВАНИЕ СЕКТОРОВ")
-
         for i in range(len(self.center_of_small_circles)):
             x0, y0 = self.center_of_small_circles[i][0], self.center_of_small_circles[i][1]
             x1, y1 = self.point_intersect_on_line[i][0], self.point_intersect_on_line[i][1]
             x2, y2 = self.point_intersect_big_and_small_circle[i][0], self.point_intersect_big_and_small_circle[i][1]
-            print("Центр ", x0, y0)
             width = 2 * self.r_small_circle
             height = 2 * self.r_small_circle
 
@@ -282,11 +280,6 @@ class Window(QDialog):
                 temp_2 = Z(angle_2)
             else:
                 temp_2 = angle_2
-
-            print("После преобразования", temp_1)
-            print("После преобразования", temp_2)
-            print("1: ", temp_1 - temp_2)
-            print("2: ", temp_2 - temp_1)
 
             if temp_1 > temp_2:
                 d1 = temp_1 - temp_2
@@ -306,14 +299,6 @@ class Window(QDialog):
                 else:
                     start_angle = temp_1
                     end_angle = temp_2
-
-
-            # if abs(temp_1 - temp_2) > 180:
-            #     start_angle = angle_2
-            #     end_angle = angle_1
-            # else:
-            #     start_angle = angle_1
-            #     end_angle = angle_2
 
             arc = matplotlib.patches.Arc((x0, y0),
                                          width,
@@ -360,6 +345,21 @@ class Window(QDialog):
         print()
         print("#####################################################################")
         print("########################  ", name_func, "  ##############################")
+
+    def __random(self):
+        x1 = random.randint(-20, 20)
+        y1 = random.randint(-20, 20)
+        r1 = random.randint(1, 10)
+        s = str(x1) + " " + str(y1) + " " + str(r1)
+        self.main_circle.setText(s)
+        x2 = random.randint(x1 - 5, x1 + 5)
+        y2 = random.randint(y1 - 5, y1 + 5)
+        x3 = random.randint(x1 - 5, x1 + 5)
+        y3 = random.randint(y1 - 5, y1 + 5)
+        s = str(x2) + " " + str(y2) + " " + str(x3) + " " + str(y3)
+        self.line.setText(s)
+        r2 = random.randint(1, 6)
+        self.circle.setText(str(r2))
 
 
 if __name__ == '__main__':
