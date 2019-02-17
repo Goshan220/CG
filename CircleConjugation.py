@@ -3,12 +3,11 @@ from PyQt5.QtWidgets import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-from math import sqrt
-from sympy import Line2D
-from sympy import sympify, Rational
-from sympy.geometry import Point2D, Segment2D, Circle
 import matplotlib.lines as mlines
 import matplotlib.path
+from math import sqrt
+from sympy import Line2D, sympify, Rational
+from sympy.geometry import Point2D, Segment2D, Circle
 import math
 import random
 
