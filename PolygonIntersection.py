@@ -5,7 +5,9 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt
 import random
 import shapely.geometry as sg
+from shapely.ops import polygonize, unary_union
 import descartes
+import numpy as np
 
 
 class Window(QDialog):
@@ -108,46 +110,74 @@ class Window(QDialog):
         return 0
 
     def __plot(self):
-        self.figure.clear()
-        __intersected_figure = self.__find_intersect()
-        if __intersected_figure == 0:
-            __intersected_figure = [(0, 0), (1, 1)]
-        __blue_figure = plt.Polygon(self.blue_figure, color="b", closed=False)
-        __red_figure = plt.Polygon(self.red_figure, color="r", closed=False)
+        try:
+            self.figure.clear()
+            __intersected_figure = self.__find_intersect2()
+            __blue_figure = plt.Polygon(self.blue_figure, color="b", closed=False)
+            __red_figure = plt.Polygon(self.red_figure, color="r", closed=False)
 
-        self.figure.gca().add_patch(__blue_figure)
-        self.figure.gca().add_patch(__red_figure)
-        self.figure.gca().add_patch(descartes.PolygonPatch(__intersected_figure, fc='g', alpha=0.5))
-        self.figure.gca().axis('scaled')
-        self.canvas.draw()
+            self.figure.gca().add_patch(__blue_figure)
+            self.figure.gca().add_patch(__red_figure)
+            self.figure.gca().add_patch(descartes.PolygonPatch(__intersected_figure, fc='g', alpha=1))
+            self.figure.gca().axis('scaled')
+            self.canvas.draw()
+        except:
+            print("Ну бывает")
 
-    def __find_intersect(self):
-        p1 = sg.Polygon(self.blue_figure).buffer(.01)
-        p2 = sg.Polygon(self.red_figure).buffer(.01)
+    # def __find_intersect(self):
+    #     p1 = sg.Polygon(self.blue_figure).buffer(0)
+    #     p2 = sg.Polygon(self.red_figure).buffer(0)
+    #     p3 = p1.intersection(p2)
+    #     print(self.red_figure)
+    #     print(self.blue_figure)
+    #     print(p3)
+    #     # temp = str(p3)[0:2]
+    #     # if temp[0] == "P":
+    #     #     print("POLY")
+    #     #     temp = str(p3)[10::]
+    #     #     temp = temp[:-2:]
+    #     #     temp = temp.split(",")
+    #     #     print(temp)
+    #     #     res = []
+    #     #     for i in temp:
+    #     #         i.split()
+    #     #         res.append((i[0], i[1]))
+    #     #     print(res)
+    #     # elif temp[0] == "M":
+    #     #     print("MULTY")
+    #     #     temp = str(p3)[13::]
+    #     #     print(temp)
+    #     # elif temp[0] == "G":
+    #     #     return 0
+    #     return p3
+
+    def __find_intersect2(self):
+        p1 = self.blue_figure
+        p2 = self.red_figure
+        print("<KJJJ")
+        p1 = self.__simplify(p1)
+        print("rere")
+        p2 = self.__simplify(p2)
+        print("rere")
         p3 = p1.intersection(p2)
-        print(self.red_figure)
-        print(self.blue_figure)
-        print(p3)
-        temp = str(p3)[0:2]
-        if temp[0] == "P":
-            print("POLY")
-            temp = str(p3)[10::]
-            temp = temp[:-2:]
-            temp = temp.split(",")
-            print(temp)
-            res = []
-            for i in temp:
-                i.split()
-                res.append((i[0], i[1]))
-            print(res)
-        elif temp[0] == "M":
-            print("MULTY")
-            temp = str(p3)[13::]
-            print(temp)
-        elif temp[0] == "G":
-            return 0
-
         return p3
+
+    def __simplify(self, points):
+        x = []
+        y = []
+        print("heellp")
+        for i in points:
+            x.append(i[0])
+            y.append(i[1])
+        ls = sg.LineString(np.c_[x, y])
+        print(ls)
+        lr = sg.LineString(ls.coords[:] + ls.coords[0:1])
+        lr.is_simple  # False
+        mls = unary_union(lr)
+        mls.geom_type  # MultiLineString'
+        mp = sg.MultiPolygon(list(polygonize(mls)))
+        print(mp)
+        return mp
 
 
 if __name__ == '__main__':
