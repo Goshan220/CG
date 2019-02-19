@@ -18,7 +18,8 @@ class Window(QDialog):
         self.toolbar = NavigationToolbar(self.canvas, self)
 
         # buttons
-        self.button_key = 3  # 1 - синий полигон, 2 - красный полигон, 3 - оба полигона
+        self.figure_key = 3  # 1 - синий полигон, 2 - красный полигон, 3 - оба полигона
+        self.last_action = 0 # 1 - up, 2 - down, 3 - left, 4 - right
         self.button_first_figure = QPushButton('Синий полигон')
         self.button_first_figure.clicked.connect(self.__select_blue_figure)
         self.button_second_figure = QPushButton('Красный полигон')
@@ -63,27 +64,79 @@ class Window(QDialog):
         self.resize(900, 700)
 
     def __select_blue_figure(self):
-        self.button_key = 1
+        self.figure_key = 1
         return 0
 
     def __select_red_figure(self):
-        self.button_key = 2
+        self.figure_key = 2
         return 0
 
     def __select_all_figure(self):
-        self.button_key = 3
+        self.figure_key = 3
         return 0
 
     def __up(self):
+        print('UP!')
+        if self.figure_key == 1:
+            print(self.blue_figure)
+            temp = [x[1] for x in self.blue_figure]
+            for i in range(len(self.blue_figure)):
+                self.blue_figure[i] = (self.blue_figure[i][0], temp[i] + 1)
+        if self.figure_key == 2:
+            print(self.red_figure)
+            temp = [x[1] for x in self.red_figure]
+            for i in range(len(self.red_figure)):
+                self.red_figure[i] = (self.red_figure[i][0], temp[i] + 1)
+        self.last_action = 1
+        self.__plot()
         return 0
 
     def __down(self):
+        print('DOWN!')
+        if self.figure_key == 1:
+            print(self.blue_figure)
+            temp = [x[1] for x in self.blue_figure]
+            for i in range(len(self.blue_figure)):
+                self.blue_figure[i] = (self.blue_figure[i][0], temp[i] - 1)
+        if self.figure_key == 2:
+            print(self.red_figure)
+            temp = [x[1] for x in self.red_figure]
+            for i in range(len(self.red_figure)):
+                self.red_figure[i] = (self.red_figure[i][0], temp[i] - 1)
+        self.last_action = 2
+        self.__plot()
         return 0
 
     def __right(self):
+        print('Right!')
+        if self.figure_key == 1:
+            print(self.blue_figure)
+            temp = [x[0] for x in self.blue_figure]
+            for i in range(len(self.blue_figure)):
+                self.blue_figure[i] = (temp[i] + 1, self.blue_figure[i][1])
+        if self.figure_key == 2:
+            print(self.red_figure)
+            temp = [x[0] for x in self.red_figure]
+            for i in range(len(self.red_figure)):
+                self.red_figure[i] = (temp[i] + 1, self.red_figure[i][1])
+        self.last_action = 4
+        self.__plot()
         return 0
 
     def __left(self):
+        print('Left!')
+        if self.figure_key == 1:
+            print(self.blue_figure)
+            temp = [x[0] for x in self.blue_figure]
+            for i in range(len(self.blue_figure)):
+                self.blue_figure[i] = (temp[i] - 1, self.blue_figure[i][1])
+        if self.figure_key == 2:
+            print(self.red_figure)
+            temp = [x[0] for x in self.red_figure]
+            for i in range(len(self.red_figure)):
+                self.red_figure[i] = (temp[i] - 1, self.red_figure[i][1])
+        self.last_action = 3
+        self.__plot()
         return 0
 
     def __random(self):
@@ -95,16 +148,16 @@ class Window(QDialog):
             points.append((x, y))
         points.append(points[0])
 
-        if self.button_key == 1:
+        if self.figure_key == 1:
             self.blue_figure = points
             self.__plot()
 
-        elif self.button_key == 2:
+        elif self.figure_key == 2:
             self.red_figure = points
             self.__plot()
 
-        elif self.button_key == 3:
-            self.button_key = 2
+        elif self.figure_key == 3:
+            self.figure_key = 2
             self.blue_figure = points
             self.__random()
         return 0
@@ -112,71 +165,43 @@ class Window(QDialog):
     def __plot(self):
         try:
             self.figure.clear()
-            __intersected_figure = self.__find_intersect2()
             __blue_figure = plt.Polygon(self.blue_figure, color="b", closed=False)
             __red_figure = plt.Polygon(self.red_figure, color="r", closed=False)
-
             self.figure.gca().add_patch(__blue_figure)
             self.figure.gca().add_patch(__red_figure)
-            self.figure.gca().add_patch(descartes.PolygonPatch(__intersected_figure, fc='g', alpha=1))
+            try:
+                __intersected_figure = self.__find_intersect()
+                __yellow_figure = descartes.PolygonPatch(__intersected_figure, fc='y', alpha=1)
+                self.figure.gca().add_patch(__yellow_figure)
+            except:
+                print("Without Intersect")
+                # self.__random()
+                # self.__plot()
             self.figure.gca().axis('scaled')
             self.canvas.draw()
         except:
-            print("Ну бывает")
+            print("EXEPTION")
 
-    # def __find_intersect(self):
-    #     p1 = sg.Polygon(self.blue_figure).buffer(0)
-    #     p2 = sg.Polygon(self.red_figure).buffer(0)
-    #     p3 = p1.intersection(p2)
-    #     print(self.red_figure)
-    #     print(self.blue_figure)
-    #     print(p3)
-    #     # temp = str(p3)[0:2]
-    #     # if temp[0] == "P":
-    #     #     print("POLY")
-    #     #     temp = str(p3)[10::]
-    #     #     temp = temp[:-2:]
-    #     #     temp = temp.split(",")
-    #     #     print(temp)
-    #     #     res = []
-    #     #     for i in temp:
-    #     #         i.split()
-    #     #         res.append((i[0], i[1]))
-    #     #     print(res)
-    #     # elif temp[0] == "M":
-    #     #     print("MULTY")
-    #     #     temp = str(p3)[13::]
-    #     #     print(temp)
-    #     # elif temp[0] == "G":
-    #     #     return 0
-    #     return p3
-
-    def __find_intersect2(self):
+    def __find_intersect(self):
         p1 = self.blue_figure
         p2 = self.red_figure
-        print("<KJJJ")
         p1 = self.__simplify(p1)
-        print("rere")
         p2 = self.__simplify(p2)
-        print("rere")
         p3 = p1.intersection(p2)
         return p3
 
     def __simplify(self, points):
         x = []
         y = []
-        print("heellp")
         for i in points:
             x.append(i[0])
             y.append(i[1])
         ls = sg.LineString(np.c_[x, y])
-        print(ls)
         lr = sg.LineString(ls.coords[:] + ls.coords[0:1])
         lr.is_simple  # False
         mls = unary_union(lr)
         mls.geom_type  # MultiLineString'
         mp = sg.MultiPolygon(list(polygonize(mls)))
-        print(mp)
         return mp
 
 
