@@ -8,6 +8,7 @@ import shapely.geometry as sg
 from shapely.ops import polygonize, unary_union
 import descartes
 import numpy as np
+import generator
 
 
 class Window(QDialog):
@@ -142,10 +143,11 @@ class Window(QDialog):
     def __random(self):
         __number_of_points = self.line.text().split()
         points = []
-        for i in range(int(__number_of_points[0])):
-            x = int(random.randint(0, 20))
-            y = int(random.randint(0, 20))
-            points.append((x, y))
+        # for i in range(int(__number_of_points[0])):
+        #     x = int(random.randint(0, 20))
+        #     y = int(random.randint(0, 20))
+        #     points.append((x, y))
+        points = generator.generatePolygon(0, 0, 10, 0, 1, int(__number_of_points[0]))
         points.append(points[0])
 
         if self.figure_key == 1:
@@ -160,13 +162,14 @@ class Window(QDialog):
             self.figure_key = 2
             self.blue_figure = points
             self.__random()
+        self.figure_key = 3
         return 0
 
     def __plot(self):
         try:
             self.figure.clear()
-            __blue_figure = plt.Polygon(self.blue_figure, color="b", closed=False)
-            __red_figure = plt.Polygon(self.red_figure, color="r", closed=False)
+            __blue_figure = plt.Polygon(self.blue_figure, color="b", closed=False, linewidth=0)
+            __red_figure = plt.Polygon(self.red_figure, color="r", closed=False, linewidth=0)
             self.figure.gca().add_patch(__blue_figure)
             self.figure.gca().add_patch(__red_figure)
             try:
@@ -180,7 +183,7 @@ class Window(QDialog):
             self.figure.gca().axis('scaled')
             self.canvas.draw()
         except:
-            print("EXEPTION")
+            print("EXCEPTION")
 
     def __find_intersect(self):
         p1 = self.blue_figure
